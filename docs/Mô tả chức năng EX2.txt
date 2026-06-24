@@ -1,6 +1,6 @@
 -  Chứng năng tìm kiếm tòa nhà theo:
  + Tên tòa nhà
- + Diện tích
+ + Diện tích sàn
  + Quận hiện có
  + Phường
  + Đường
