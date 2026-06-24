@@ -1,0 +1,24 @@
+- 1 quận có nhiều tòa nhà
+- 1 tòa nhà có nhiều diện tích thuê
+- 1 tòa nhà sẽ có nhiều loại tòa nhà khác nhau
+- 1 tòa nhà sẽ được nhiều nhân viên cùng quản lý và ngược lại
+1 nv sẽ quản lý nhiều tòa nhà.
+- 1 khách hàng sẽ được nhiều nhân viên cùng chăm sóc
+và 1 nhân viên sẽ chăm sóc nhiều khách hàng.
+*User:
+ + 1 tài khoản có thể có 1 / nhiều role - 1 role có thể nằm ở nhiều tk
+ + role(id, code, name).
+ + Giữa khác hàng với nhân viên sẽ có nhiều giao dịch 
+=> Mỗi giao dịch thì sẽ có nhiều loại giao dịch
+ + User(id, username, password)
+
+- ToaNha (id, Tên tòa nhà, quận, phường, đường, kết cấu, số tầng hầm,
+diện tich sàn, hướng, hạng, diện tích thuê, giá thuê, mô tả giá, phí
+dịch vụ, phí oto, phí mô tô, phí ngoài giờ, tiền điện, đặt cọc, thanh
+toán, thời hạn thuê, thời gian trang trí, tên quản lý, SĐT quản lý,
+phí môi giới, loại tòa nhà, ghi chú).
+- Quan(id, code, name)
+- LoaiToaNha(id, code, name)
+- Customer(id, Tên khách hàng, SĐT, email)
+- DienTichThue(id, value, buildingId)
+

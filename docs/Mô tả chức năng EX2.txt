@@ -1,0 +1,30 @@
+-  Chứng năng tìm kiếm tòa nhà theo:
+ + Tên tòa nhà
+ + Diện tích
+ + Quận hiện có
+ + Phường
+ + Đường
+ + Số tầng hầm
+ + Hướng
+ + Hạng
+ + Diện tích từ
+ + Diện tích đến
+ + Giá thuê từ
+ + Giá thuê đến
+ + Tên quản lý
+ + Điện thoại quản lý
+ + Chọn nhân viên phụ trách (tìm kiếm bên BE nhận vào id để search)
+ + Loại tòa nhà
+--> Các fields dữ liệu trả về:
+	+ Tên sản phẩm (tên tòa nhà)
+	+ Địa chỉ
+	+ Số tầng hầm
+	+ Tên quản lý
+	+ Số điện thoại (của quản lý)
+	+ D.T sàn
+	+ D.T trống
+	+ Giá thuê
+	+ Phí dịch vụ
+	+ Phí MG
+	+ Diện tích thuê (trả về 1 string bao gồm tất cả dt thuê của
+tòa nhà đó, ví dụ: "100, 200, 300")
