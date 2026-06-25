@@ -1,5 +1,6 @@
 package com.javaweb.model;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class BuildingSearchResponse {
@@ -10,9 +11,9 @@ public class BuildingSearchResponse {
 	private String managerPhone;
 	private Double floor_area;
 	private Double empty_area;
-	private Double rentPrice;
-	private Double serviceFees;
-	private Double brokerageFees;
+	private BigDecimal rentPrice;
+	private BigDecimal serviceFees;
+	private BigDecimal brokerageFees;
 	
 	public String getName() {
 		return name;
@@ -56,22 +57,23 @@ public class BuildingSearchResponse {
 	public void setEmpty_area(Double empty_area) {
 		this.empty_area = empty_area;
 	}
-	public Double getRentPrice() {
+	
+	public BigDecimal getRentPrice() {
 		return rentPrice;
 	}
-	public void setRentPrice(Double rentPrice) {
+	public void setRentPrice(BigDecimal rentPrice) {
 		this.rentPrice = rentPrice;
 	}
-	public Double getServiceFees() {
+	public BigDecimal getServiceFees() {
 		return serviceFees;
 	}
-	public void setServiceFees(Double serviceFees) {
+	public void setServiceFees(BigDecimal serviceFees) {
 		this.serviceFees = serviceFees;
 	}
-	public Double getBrokerageFees() {
+	public BigDecimal getBrokerageFees() {
 		return brokerageFees;
 	}
-	public void setBrokerageFees(Double brokerageFees) {
+	public void setBrokerageFees(BigDecimal brokerageFees) {
 		this.brokerageFees = brokerageFees;
 	}
 	public List<String> getRentArea() {
