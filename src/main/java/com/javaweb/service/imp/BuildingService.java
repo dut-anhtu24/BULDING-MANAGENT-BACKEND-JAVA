@@ -26,7 +26,10 @@ public class BuildingService implements IBuildingService {
 		for(BuildingSearchDTO building : buildings) {
 			BuildingSearchResponse response = new BuildingSearchResponse();
 			response.setName(building.getName());
-			response.setAddress(building.getStreet() + building.getWard() + building.getDistrictName());
+			response.setAddress(building.getStreet() +  " " + 
+								building.getWard() +  " " + 
+								building.getDistrictName());
+			
 			response.setManagerName(building.getManagerName());
 			response.setManagerPhone(building.getManagerPhoneNumber());
 			response.setFloor_area(building.getFloorArea());
@@ -34,8 +37,9 @@ public class BuildingService implements IBuildingService {
 			response.setEmpty_area(0.0); // TODO: D.T trong = dien tich san - dien tich thue
 			response.setRentPrice(building.getRent());
 			response.setServiceFees(building.getServicePrice());
-			response.setBrokerageFees(building.getBrokerageFees().multiply(building.getRent()));
-			
+			if(building.getBrokerageFees() != null && building.getRent() != null) {
+				response.setBrokerageFees(building.getBrokerageFees().multiply(building.getRent()));
+			} else response.setBrokerageFees(null);	
 			responses.add(response);
 		}
 		

@@ -12,8 +12,8 @@ public class BuildingSearchRequest {
 	private Integer numberOfBasement;
 	private String direction;
 	private String level;
-	private Double areaFrom;
-	private Double areaTo;
+	private Integer areaFrom;
+	private Integer areaTo;
 	private BigDecimal rentPriceFrom;
 	private BigDecimal rentPriceTo;
 	private String managerName;	private String managerPhone;
@@ -67,16 +67,17 @@ public class BuildingSearchRequest {
 	public void setLevel(String level) {
 		this.level = level;
 	}
-	public Double getAreaFrom() {
+	
+	public Integer getAreaFrom() {
 		return areaFrom;
 	}
-	public void setAreaFrom(Double areaFrom) {
+	public void setAreaFrom(Integer areaFrom) {
 		this.areaFrom = areaFrom;
 	}
-	public Double getAreaTo() {
+	public Integer getAreaTo() {
 		return areaTo;
 	}
-	public void setAreaTo(Double areaTo) {
+	public void setAreaTo(Integer areaTo) {
 		this.areaTo = areaTo;
 	}
 	public BigDecimal getRentPriceFrom() {

@@ -19,6 +19,62 @@ public class BuildingRepository implements IBuildingRepository {
 	static final String URL = "jdbc:mysql://localhost:3306/building_management?userSSL=false";
 	static final String USER = "root";
 	static final String PASS = "071026";
+		
+	@Override
+	public List<BuildingSearchDTO> getBuildingsByRequest(BuildingSearchRequest request) {
+		StringBuilder sql = new StringBuilder("select b.name, b.floor_area, d.name as districtname, "
+				+ "b.ward, b.street, b.numberofbasement, b.rent, b.service_price, "
+				+ "b.manager_name, b.manager_phone_number, b.brokerage_fees\n"
+				+ "" // TODO: Viet them Query de lay ra List dien tich thue
+				+ "from building b ");
+		sql.append("left join district d on b.districtid = d.id\n");
+		// TODO: Join them bang renttype de tinh list dien tich thue
+		if(request.getBuildingTypes() != null && !request.getBuildingTypes().isEmpty()) {
+			sql.append("join building_buildingtype bbt on b.id = bbt.BUILDINGID\n"
+					+ "join buildingtype bt on bbt.BUILDINGTYPEID = bt.id\n");
+		}
+		
+		if(request.getStaffId() != null) {
+			sql.append("left join assignmentbuilding ab on ab.buildingid = b.id\n"
+					+ "join user u on u.id = ab.staffid\n");
+		}
+		
+		if(request.getAreaFrom() != null || request.getAreaTo() != null) {
+			sql.append("join rentarea ra on ra.buildingid = b.id\n");
+		}
+		
+		sql.append("where 1 = 1 ");
+		validateSearDataRequest(sql, request);
+		sql.append("\ngroup by b.id\n");
+		
+		System.out.println(sql);
+		
+		List<BuildingSearchDTO> result = new ArrayList<>();
+		try(Connection cnn = DriverManager.getConnection(URL, USER, PASS);
+			Statement stmt = cnn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql.toString())) {
+			while(rs.next()) {
+				BuildingSearchDTO building = new BuildingSearchDTO();
+				building.setName(rs.getString("name"));
+				building.setWard(rs.getString("ward"));
+				building.setDistrictName(rs.getString("districtname"));
+				building.setStreet(rs.getString("street"));
+				building.setFloorArea(rs.getDouble("floor_area"));
+				building.setNumberOfBasement(rs.getInt("numberofbasement"));
+				building.setRent(rs.getBigDecimal("rent"));
+				building.setServicePrice(rs.getBigDecimal("service_price"));
+				building.setManagerName(rs.getString("manager_name"));
+				building.setManagerPhoneNumber(rs.getString("manager_phone_number"));
+				building.setBrokerageFees(rs.getBigDecimal("brokerage_fees"));
+				
+				result.add(building);
+			}
+		} catch(SQLException e) {
+			e.printStackTrace();
+			System.err.println("Connect to databse failed...");
+		}
+		return result;
+	}
 	
 	public void validateSearDataRequest(StringBuilder sql, BuildingSearchRequest request) {
 		if(request.getName() != null && !request.getName().isEmpty()) {
@@ -43,13 +99,13 @@ public class BuildingRepository implements IBuildingRepository {
 		
 		if(request.getAreaFrom() != null || request.getAreaTo() != null) {
 			if(request.getAreaFrom() != null && request.getAreaTo() != null) {
-				sql.append("AND b.floor_area >= " + request.getAreaFrom() 
-						+ " AND b.floor_area <= " + request.getAreaTo() + " ");
+				sql.append("AND ra.areavalue between " + request.getAreaFrom()
+						+ " and " + request.getAreaTo() + " ");
 			}
 			else if(request.getAreaFrom() != null) {
-				sql.append("AND b.floor_area >= " + request.getAreaFrom() + " ");
+				sql.append("AND ra.areavalue >= " + request.getAreaFrom() + " ");
 			}
-			else sql.append("AND b.floor_area <= " + request.getAreaTo() + " ");
+			else sql.append("AND ra.areavalue <= " + request.getAreaTo() + " ");
 		}
 		
 		if(request.getRentPriceFrom() != null || request.getRentPriceTo() != null) {
@@ -89,64 +145,10 @@ public class BuildingRepository implements IBuildingRepository {
 			for(int i = 0; i < types.size(); i++) {
 				if(i > 0)
 					sql.append(" OR ");
-				sql.append("bt.code = " + types.get(i) + " ");
+				sql.append("bt.code = '" + types.get(i) + "' ");
 			}
 			
 			sql.append(");");
 		}
-	}
-	
-	@Override
-	public List<BuildingSearchDTO> getBuildingsByRequest(BuildingSearchRequest request) {
-		StringBuilder sql = new StringBuilder("select b.name, b.floor_area, d.name as districtname, "
-				+ "b.ward, b.street, b.numberofbasement, b.rent, b.service_price, "
-				+ "b.manager_name, b.manager_phone_number, b.brokerage_fees\n"
-				+ "" // TODO: Viet them Query de lay ra List dien tich thue
-				+ "from building b ");
-		
-		// TODO: Join them bang renttype de tinh list dien tich thue
-		if(request.getBuildingTypes() != null && !request.getBuildingTypes().isEmpty()) {
-			sql.append("join building_buildingtype bbt on b.id = bbt.BUILDINGID\n"
-					+ "join buildingtype bt on bbt.BUILDINGTYPEID = bt.id\n");
-		}
-		
-		if(request.getStaffId() != null) {
-			sql.append("join assignmentbuilding ab on ab.buildingid = b.id\n"
-					+ "join user u on u.id = ab.staffid\n");
-		}
-		
-		if(request.getDistrictId() != null) {
-			sql.append("join district d on b.districtid = d.id\n");
-		}
-		
-		sql.append("where 1 = 1 ");
-		validateSearDataRequest(sql, request);
-		System.err.println(sql);
-		
-		List<BuildingSearchDTO> result = new ArrayList<>();
-		try(Connection cnn = DriverManager.getConnection(URL, USER, PASS);
-			Statement stmt = cnn.createStatement();
-			ResultSet rs = stmt.executeQuery(sql.toString())) {
-			while(rs.next()) {
-				BuildingSearchDTO building = new BuildingSearchDTO();
-				building.setName(rs.getString("name"));
-				building.setWard(rs.getString("ward"));
-				building.setDistrictName(rs.getString("districtname"));
-				building.setStreet(rs.getString("street"));
-				building.setFloorArea(rs.getDouble("floor_area"));
-				building.setNumberOfBasement(rs.getInt("numberofbasement"));
-				building.setRent(rs.getBigDecimal("rent"));
-				building.setServicePrice(rs.getBigDecimal("service_price"));
-				building.setManagerName(rs.getString("manager_name"));
-				building.setManagerPhoneNumber(rs.getString("manager_phone_number"));
-				building.setBrokerageFees(rs.getBigDecimal("brokerage_fees"));
-				
-				result.add(building);
-			}
-		} catch(SQLException e) {
-			e.printStackTrace();
-			System.err.println("Connect to databse failed...");
-		}
-		return result;
 	}
 }
