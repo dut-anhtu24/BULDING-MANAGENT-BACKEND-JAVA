@@ -3,8 +3,9 @@ package com.javaweb.model;
 import java.math.BigDecimal;
 
 public class BuildingSearchDTO {
+	private Long id;
 
-    private String name;
+	private String name;
 
     private String districtName;
 
@@ -29,6 +30,14 @@ public class BuildingSearchDTO {
     private BigDecimal brokerageFees;
 
     private String rentArea;
+	
+    public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 
 	public String getName() {
 		return name;

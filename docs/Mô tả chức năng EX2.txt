@@ -30,4 +30,4 @@
 tòa nhà đó, ví dụ: "100, 200, 300")
 
 *NOTE: Hàm nhận request tại Controller ko quá 3 tham số,
-nếu quá thì phải tìm cách giảm xuống)
+nếu quá thì phải tìm cách giảm xuống

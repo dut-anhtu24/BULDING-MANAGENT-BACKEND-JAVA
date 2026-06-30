@@ -1,7 +1,6 @@
 package com.javaweb.model;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 public class BuildingSearchResponse {
 	private String name;
@@ -14,6 +13,7 @@ public class BuildingSearchResponse {
 	private BigDecimal rentPrice;
 	private BigDecimal serviceFees;
 	private BigDecimal brokerageFees;
+	private String rentArea;
 	
 	public String getName() {
 		return name;
@@ -76,11 +76,11 @@ public class BuildingSearchResponse {
 	public void setBrokerageFees(BigDecimal brokerageFees) {
 		this.brokerageFees = brokerageFees;
 	}
-	public List<String> getRentArea() {
+	public String getRentArea() {
 		return rentArea;
 	}
-	public void setRentArea(List<String> rentArea) {
+	public void setRentArea(String rentArea) {
 		this.rentArea = rentArea;
 	}
-	private List<String> rentArea;
+	
 }

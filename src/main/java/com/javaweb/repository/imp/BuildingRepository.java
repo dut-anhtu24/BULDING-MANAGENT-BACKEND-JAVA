@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Repository;
 
@@ -22,16 +23,20 @@ public class BuildingRepository implements IBuildingRepository {
 		
 	@Override
 	public List<BuildingSearchDTO> getBuildingsByRequest(BuildingSearchRequest request) {
-		StringBuilder sql = new StringBuilder("select b.name, b.floor_area, d.name as districtname, "
-				+ "b.ward, b.street, b.numberofbasement, b.rent, b.service_price, "
-				+ "b.manager_name, b.manager_phone_number, b.brokerage_fees\n"
-				+ "" // TODO: Viet them Query de lay ra List dien tich thue
+		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area, "
+				+ "d.name as districtname, b.ward, b.street, b.numberofbasement, b.rent, "
+				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees, "
+				+ "rt.areavalue\n" // TODO: Viet them Query de lay ra List dien tich thue
 				+ "from building b ");
 		sql.append("left join district d on b.districtid = d.id\n");
-		// TODO: Join them bang renttype de tinh list dien tich thue
-		if(request.getBuildingTypes() != null && !request.getBuildingTypes().isEmpty()) {
-			sql.append("join building_buildingtype bbt on b.id = bbt.BUILDINGID\n"
-					+ "join buildingtype bt on bbt.BUILDINGTYPEID = bt.id\n");
+		sql.append("left join rentarea rt on b.id = rt.buildingid\n");
+		
+		List<String> types = request.getBuildingTypes();
+		if(types != null && !types.isEmpty() // Kiem tra list ko null, ko rong
+		&& types.stream().noneMatch(Objects::isNull)) // Kiem tra list ko co phan tu rong
+		{
+			sql.append("left join building_buildingtype bbt on b.id = bbt.buildingid\n"
+					+ "left join buildingtype bt on bbt.buildingtypeid = bt.id\n");
 		}
 		
 		if(request.getStaffId() != null) {
@@ -45,7 +50,7 @@ public class BuildingRepository implements IBuildingRepository {
 		
 		sql.append("where 1 = 1 ");
 		validateSearDataRequest(sql, request);
-		sql.append("\ngroup by b.id\n");
+//		sql.append("\ngroup by b.id\n");
 		
 		System.out.println(sql);
 		
@@ -55,6 +60,7 @@ public class BuildingRepository implements IBuildingRepository {
 			ResultSet rs = stmt.executeQuery(sql.toString())) {
 			while(rs.next()) {
 				BuildingSearchDTO building = new BuildingSearchDTO();
+				building.setId(rs.getLong("id"));
 				building.setName(rs.getString("name"));
 				building.setWard(rs.getString("ward"));
 				building.setDistrictName(rs.getString("districtname"));
@@ -66,6 +72,7 @@ public class BuildingRepository implements IBuildingRepository {
 				building.setManagerName(rs.getString("manager_name"));
 				building.setManagerPhoneNumber(rs.getString("manager_phone_number"));
 				building.setBrokerageFees(rs.getBigDecimal("brokerage_fees"));
+				building.setRentArea(rs.getString("areavalue"));
 				
 				result.add(building);
 			}
@@ -139,16 +146,19 @@ public class BuildingRepository implements IBuildingRepository {
 			sql.append("AND b.numberofbasement = " + request.getNumberOfBasement());
 		}
 		
-		if(request.getBuildingTypes() != null && !request.getBuildingTypes().isEmpty()) {
-			sql.append("AND ( ");
+		if(request.getBuildingTypes() != null && !request.getBuildingTypes().isEmpty()
+			&& request.getBuildingTypes().stream().noneMatch(Objects::isNull)) {
 			List<String> types = request.getBuildingTypes();
-			for(int i = 0; i < types.size(); i++) {
-				if(i > 0)
-					sql.append(" OR ");
-				sql.append("bt.code = '" + types.get(i) + "' ");
+			if(types != null && !types.isEmpty()
+					&& types.stream().noneMatch(Objects::isNull)) {
+				sql.append("AND ( ");
+				for(int i = 0; i < types.size(); i++) {
+					if(i > 0)
+						sql.append(" OR ");
+					sql.append("bt.code = '" + types.get(i) + "' ");
+				}
+				sql.append(")\n");
 			}
-			
-			sql.append(");");
 		}
 	}
 }
