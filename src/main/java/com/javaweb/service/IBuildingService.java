@@ -2,9 +2,9 @@ package com.javaweb.service;
 
 import java.util.List;
 
-import com.javaweb.model.BuildingDTO;
+import com.javaweb.model.BuildingSearchRequest;
+import com.javaweb.model.BuildingSearchResponse;
 
 public interface IBuildingService {
-	List<BuildingDTO> FindAllBuildings();
-	List<BuildingDTO> FindBuildingsByName(String name, Long districtId, List<String> typeCode);
+	List<BuildingSearchResponse> getBuildingsByRequest(BuildingSearchRequest request);
 }

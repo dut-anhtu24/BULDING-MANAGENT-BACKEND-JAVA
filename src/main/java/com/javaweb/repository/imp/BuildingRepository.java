@@ -1,95 +1,169 @@
 package com.javaweb.repository.imp;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Repository;
 
+import com.javaweb.model.BuildingSearchDTO;
+import com.javaweb.model.BuildingSearchRequest;
 import com.javaweb.repository.IBuildingRepository;
-import com.javaweb.repository.entity.BuildingEntity;
+import com.javaweb.utils.NumberUtil;
+import com.javaweb.utils.StringUtil;
 
 @Repository
 public class BuildingRepository implements IBuildingRepository {
 	static final String URL = "jdbc:mysql://localhost:3306/building_management?userSSL=false";
 	static final String USER = "root";
 	static final String PASS = "071026";
-	
+		
 	@Override
-	public List<BuildingEntity> FindAllBuildings() {
-		String sql = "SELECT * FROM building";
-		List<BuildingEntity> result = new ArrayList<>();
+	public List<BuildingSearchDTO> getBuildingsByRequest(BuildingSearchRequest request) {
+		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area, "
+				+ "d.name as districtname, b.ward, b.street, b.numberofbasement, b.rent, "
+				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees, "
+				+ "ra.areavalue\n" // TODO: Viet them Query de lay ra List dien tich thue
+				+ "from building b ");
+		handleJoinTable(request, sql);
+		Map<String, Object> mapRequest = new LinkedHashMap<>();
+		Field[] fields = request.getClass().getDeclaredFields();
+		for(Field field : fields) {
+			field.setAccessible(true); // Cho phep truy cap private
+			
+			try {
+				mapRequest.put(field.getName(), field.get(request));
+			} catch(IllegalAccessException e)  {
+				e.printStackTrace();
+			}
+		}
+				
+		StringBuilder where = new StringBuilder("where 1 = 1 ");
+		queryNormal(mapRequest, where);
+		querySpecial(mapRequest, where);
+		
+		sql.append(where);
+		System.out.println(sql);
+		
+		List<BuildingSearchDTO> result = new ArrayList<>();
 		try(Connection cnn = DriverManager.getConnection(URL, USER, PASS);
-				Statement stmt = cnn.createStatement();
-				ResultSet rs = stmt.executeQuery(sql)){
+			Statement stmt = cnn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql.toString())) {
 			while(rs.next()) {
-				BuildingEntity building = new BuildingEntity();
+				
+				BuildingSearchDTO building = new BuildingSearchDTO();
+				building.setId(rs.getLong("id"));
 				building.setName(rs.getString("name"));
-				building.setStreet(rs.getString("street"));
 				building.setWard(rs.getString("ward"));
-				building.setNumberOfBasement(rs.getInt("NUMBEROFBASEMENT"));
+				building.setDistrictName(rs.getString("districtname"));
+				building.setStreet(rs.getString("street"));
+				building.setFloorArea(rs.getDouble("floor_area"));
+				building.setNumberOfBasement(rs.getInt("numberofbasement"));
+				building.setRent(rs.getBigDecimal("rent"));
+				building.setServicePrice(rs.getBigDecimal("service_price"));
+				building.setManagerName(rs.getString("manager_name"));
+				building.setManagerPhoneNumber(rs.getString("manager_phone_number"));
+				building.setBrokerageFees(rs.getBigDecimal("brokerage_fees"));
+				building.setRentArea(rs.getString("areavalue"));
+				
 				result.add(building);
 			}
 		} catch(SQLException e) {
 			e.printStackTrace();
-			System.out.print("Connected to databse failed...");
+			System.err.println("Connect to databse failed...");
 		}
-		
 		return result;
 	}
-
-	@Override
-	public List<BuildingEntity> FindBuildingsByName(String name, Long districtId, List<String> typeCodes) {
-		StringBuilder sql = new StringBuilder("SELECT * FROM building b");
-		if(typeCodes != null && !name.isEmpty()) {
-			sql.append(" join building_buildingtype bbt on b.id = bbt.BUILDINGID\r\n"
-					+ "join buildingtype bt on bbt.BUILDINGTYPEID = bt.id\r\n");
-			
+	
+	public void handleJoinTable(BuildingSearchRequest request, StringBuilder sql) {
+		sql.append("left join district d on b.districtid = d.id\n");
+		
+		List<String> types = request.getBuildingTypes();
+		if(StringUtil.stringListValid(types)) // Kiem tra list ko co phan tu rong
+		{
+			sql.append("left join building_buildingtype bbt on b.id = bbt.buildingid\n"
+					+ "left join buildingtype bt on bbt.buildingtypeid = bt.id\n");
 		}
 		
-		sql.append("where 1 = 1 ");
-		if(name != null || !name.isEmpty()) {
-			sql.append(" AND b.name like '%" + name + "%' ");
-		}
-		if(districtId != null) {
-			sql.append(" AND b.districtid = " + districtId + " ");
+		if(NumberUtil.allNotNull(request.getStaffId())) {
+			sql.append("left join assignmentbuilding ab on ab.buildingid = b.id\n"
+					+ "join user u on u.id = ab.staffid\n");
 		}
 		
-		if(typeCodes != null && !name.isEmpty()) {
-			sql.append("AND (");
-			for(int i = 0; i < typeCodes.size(); i++) {
-				if(i > 0) 
-					sql.append(" OR ");
-				sql.append(" bt.code = '" + typeCodes.get(i) + "' ");
+		if(NumberUtil.anyNotNull(request.getAreaFrom(), request.getAreaTo())) {
+			sql.append("join rentarea ra on ra.buildingid = b.id\n");
+		}
+	}
+	
+	public void queryNormal(Map<String, Object> request, StringBuilder where) {
+		for(Map.Entry<String, Object> it : request.entrySet()) {
+			if(!it.getKey().equals("staffId") && !it.getKey().equals("buildingTypes")
+				&& !it.getKey().startsWith("area") && !it.getKey().startsWith("rent")
+				&& it.getValue() != null) {
+				String value = it.getValue().toString();
+				if(StringUtil.stringValid(value)) {
+					if(NumberUtil.isNumber(value)) {
+						where.append(" AND b." + it.getKey() + " = " + value + "\n" );
+					} else {
+						where.append(" AND b." + it.getKey() + " like '%" + value + "%'\n");
+					}
+				}
 			}
-			
-			sql.append(")");
+		}
+	}
+	
+	public void querySpecial(Map<String, Object> request, StringBuilder where) {
+		String staffId = (String)request.get("staffId");
+		if(StringUtil.stringValid(staffId)) {
+			where.append("AND ab.staffid = " + staffId + "\n");
 		}
 		
-		
-		System.err.print(sql);
-		List<BuildingEntity> result = new ArrayList<>();
-		try(Connection cnn = DriverManager.getConnection(URL, USER, PASS);
-				Statement stmt = cnn.createStatement();
-				ResultSet rs = stmt.executeQuery(sql.toString())){
-			while(rs.next()) {
-				BuildingEntity building = new BuildingEntity();
-				building.setName(rs.getString("name"));
-				building.setStreet(rs.getString("street"));
-				building.setWard(rs.getString("ward"));
-				building.setNumberOfBasement(rs.getInt("NUMBEROFBASEMENT"));
-				result.add(building);
+		String rentAreaFrom = request.get("areaFrom") != null 
+				? request.get("areaFrom").toString() : null;
+		String rentAreaTo = request.get("areaTo") != null 
+				? request.get("areaTo").toString() : null;
+		if(StringUtil.stringValid(rentAreaFrom) || StringUtil.stringValid(rentAreaTo)) {
+			if(StringUtil.stringValid(rentAreaFrom) && StringUtil.stringValid(rentAreaTo)) {
+				where.append("AND b.rent >= " + rentAreaFrom
+						+ " AND b.rent <= " + rentAreaTo + "\n");
 			}
-		} catch(SQLException e) {
-			e.printStackTrace();
-			System.out.print("Connected to databse failed...");
+			else if(StringUtil.stringValid(rentAreaFrom)) {
+				where.append("AND b.rent >= " + rentAreaFrom + "\n");
+			}
+			else where.append("AND b.rent <= " + rentAreaTo + "\n");
 		}
 		
-		return result;
-	}	
+		String rentPriceFrom = request.get("rentPriceFrom") != null 
+				? request.get("rentPriceFrom").toString() : null;
+		String rentPriceTo = request.get("rentPriceTo") != null 
+				? request.get("rentPriceTo").toString() : null;
+		if(StringUtil.stringValid(rentPriceFrom) || StringUtil.stringValid(rentPriceTo)) {
+			if(StringUtil.stringValid(rentPriceFrom) && StringUtil.stringValid(rentPriceTo)) {
+				where.append("AND b.rent >= " + rentPriceFrom
+						+ " AND b.rent <= " + rentPriceTo + " ");
+			}
+			else if(rentAreaFrom != null) {
+				where.append("AND b.rent >= " + rentPriceFrom + " ");
+			}
+			else where.append("AND b.rent <= " + rentPriceTo + " ");
+		}
+		
+		@SuppressWarnings("unchecked") // Anotation thong bao compiler khong can canh bao warning nua
+		List<String> types = (List<String>)request.get("buildingTypes");
+		if(StringUtil.stringListValid(types)) {
+			List<String> code = new ArrayList<>();
+			for(String item : types) {
+				code.add("'" + item + "'");
+			}
+			where.append(" AND bt.code IN (" + String.join(",", code) + ")\n");
+		}
+	}
+	
 }
