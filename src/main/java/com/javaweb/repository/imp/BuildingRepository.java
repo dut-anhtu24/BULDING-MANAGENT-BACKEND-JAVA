@@ -1,19 +1,23 @@
 package com.javaweb.repository.imp;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 
 import org.springframework.stereotype.Repository;
 
 import com.javaweb.model.BuildingSearchDTO;
 import com.javaweb.model.BuildingSearchRequest;
 import com.javaweb.repository.IBuildingRepository;
+import com.javaweb.utils.NumberUtil;
+import com.javaweb.utils.StringUtil;
 
 @Repository
 public class BuildingRepository implements IBuildingRepository {
@@ -26,32 +30,26 @@ public class BuildingRepository implements IBuildingRepository {
 		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area, "
 				+ "d.name as districtname, b.ward, b.street, b.numberofbasement, b.rent, "
 				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees, "
-				+ "rt.areavalue\n" // TODO: Viet them Query de lay ra List dien tich thue
+				+ "ra.areavalue\n" // TODO: Viet them Query de lay ra List dien tich thue
 				+ "from building b ");
-		sql.append("left join district d on b.districtid = d.id\n");
-		sql.append("left join rentarea rt on b.id = rt.buildingid\n");
-		
-		List<String> types = request.getBuildingTypes();
-		if(types != null && !types.isEmpty() // Kiem tra list ko null, ko rong
-		&& types.stream().noneMatch(Objects::isNull)) // Kiem tra list ko co phan tu rong
-		{
-			sql.append("left join building_buildingtype bbt on b.id = bbt.buildingid\n"
-					+ "left join buildingtype bt on bbt.buildingtypeid = bt.id\n");
+		handleJoinTable(request, sql);
+		Map<String, Object> mapRequest = new LinkedHashMap<>();
+		Field[] fields = request.getClass().getDeclaredFields();
+		for(Field field : fields) {
+			field.setAccessible(true); // Cho phep truy cap private
+			
+			try {
+				mapRequest.put(field.getName(), field.get(request));
+			} catch(IllegalAccessException e)  {
+				e.printStackTrace();
+			}
 		}
+				
+		StringBuilder where = new StringBuilder("where 1 = 1 ");
+		queryNormal(mapRequest, where);
+		querySpecial(mapRequest, where);
 		
-		if(request.getStaffId() != null) {
-			sql.append("left join assignmentbuilding ab on ab.buildingid = b.id\n"
-					+ "join user u on u.id = ab.staffid\n");
-		}
-		
-		if(request.getAreaFrom() != null || request.getAreaTo() != null) {
-			sql.append("join rentarea ra on ra.buildingid = b.id\n");
-		}
-		
-		sql.append("where 1 = 1 ");
-		validateSearDataRequest(sql, request);
-//		sql.append("\ngroup by b.id\n");
-		
+		sql.append(where);
 		System.out.println(sql);
 		
 		List<BuildingSearchDTO> result = new ArrayList<>();
@@ -59,6 +57,7 @@ public class BuildingRepository implements IBuildingRepository {
 			Statement stmt = cnn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql.toString())) {
 			while(rs.next()) {
+				
 				BuildingSearchDTO building = new BuildingSearchDTO();
 				building.setId(rs.getLong("id"));
 				building.setName(rs.getString("name"));
@@ -83,82 +82,88 @@ public class BuildingRepository implements IBuildingRepository {
 		return result;
 	}
 	
-	public void validateSearDataRequest(StringBuilder sql, BuildingSearchRequest request) {
-		if(request.getName() != null && !request.getName().isEmpty()) {
-			sql.append("AND b.name like '%" + request.getName() + "%' ");
+	public void handleJoinTable(BuildingSearchRequest request, StringBuilder sql) {
+		sql.append("left join district d on b.districtid = d.id\n");
+		
+		List<String> types = request.getBuildingTypes();
+		if(StringUtil.stringListValid(types)) // Kiem tra list ko co phan tu rong
+		{
+			sql.append("left join building_buildingtype bbt on b.id = bbt.buildingid\n"
+					+ "left join buildingtype bt on bbt.buildingtypeid = bt.id\n");
 		}
 		
-		if(request.getDistrictId() != null) {
-			sql.append("AND b.districtid = " + request.getDistrictId() + " ");
+		if(NumberUtil.allNotNull(request.getStaffId())) {
+			sql.append("left join assignmentbuilding ab on ab.buildingid = b.id\n"
+					+ "join user u on u.id = ab.staffid\n");
 		}
 		
-		if(request.getFloor_area() != null) {
-			sql.append("AND b.floor_area = " + request.getFloor_area() + " ");
+		if(NumberUtil.anyNotNull(request.getAreaFrom(), request.getAreaTo())) {
+			sql.append("join rentarea ra on ra.buildingid = b.id\n");
 		}
-		
-		if(request.getLevel() != null) {
-			sql.append("AND b.building_level = '" + request.getLevel() + "' ");
-		}
-		
-		if(request.getDirection() != null && !request.getDirection().isEmpty()) {
-			sql.append("AND b.direction like '%" + request.getDirection() + "%' ");
-		}
-		
-		if(request.getAreaFrom() != null || request.getAreaTo() != null) {
-			if(request.getAreaFrom() != null && request.getAreaTo() != null) {
-				sql.append("AND ra.areavalue between " + request.getAreaFrom()
-						+ " and " + request.getAreaTo() + " ");
-			}
-			else if(request.getAreaFrom() != null) {
-				sql.append("AND ra.areavalue >= " + request.getAreaFrom() + " ");
-			}
-			else sql.append("AND ra.areavalue <= " + request.getAreaTo() + " ");
-		}
-		
-		if(request.getRentPriceFrom() != null || request.getRentPriceTo() != null) {
-			if(request.getRentPriceFrom() != null && request.getRentPriceTo() != null) {
-				sql.append("AND b.rent >= " + request.getRentPriceFrom() 
-						+ " AND b.rent <= " + request.getRentPriceTo() + " ");
-			}
-			else if(request.getRentPriceFrom() != null) {
-				sql.append("AND b.rent >= " + request.getRentPriceFrom() + " ");
-			}
-			else sql.append("AND b.rent <= " + request.getRentPriceTo() + " ");
-		}
-		
-		if(request.getManagerName() != null && !request.getManagerName().isEmpty()) {
-			sql.append("AND b.manager_name like '%" + request.getManagerName() + "%' ");
-		}
-		
-		if(request.getManagerPhone() != null && !request.getManagerPhone().isEmpty()) {
-			sql.append("AND b.manager_phone_number like  '%" + request.getManagerPhone() + "%' ");
-		}
-		
-		if(request.getWard() != null && !request.getWard().isEmpty()) {
-			sql.append("AND b.ward like '%" + request.getWard() + "%' ");
-		}
-		
-		if(request.getStreet() != null && !request.getStreet().isEmpty()) {
-			sql.append("AND b.street like '%" + request.getStreet() + "%' ");
-		}
-		
-		if(request.getNumberOfBasement() != null) {
-			sql.append("AND b.numberofbasement = " + request.getNumberOfBasement());
-		}
-		
-		if(request.getBuildingTypes() != null && !request.getBuildingTypes().isEmpty()
-			&& request.getBuildingTypes().stream().noneMatch(Objects::isNull)) {
-			List<String> types = request.getBuildingTypes();
-			if(types != null && !types.isEmpty()
-					&& types.stream().noneMatch(Objects::isNull)) {
-				sql.append("AND ( ");
-				for(int i = 0; i < types.size(); i++) {
-					if(i > 0)
-						sql.append(" OR ");
-					sql.append("bt.code = '" + types.get(i) + "' ");
+	}
+	
+	public void queryNormal(Map<String, Object> request, StringBuilder where) {
+		for(Map.Entry<String, Object> it : request.entrySet()) {
+			if(!it.getKey().equals("staffId") && !it.getKey().equals("buildingTypes")
+				&& !it.getKey().startsWith("area") && !it.getKey().startsWith("rent")
+				&& it.getValue() != null) {
+				String value = it.getValue().toString();
+				if(StringUtil.stringValid(value)) {
+					if(NumberUtil.isNumber(value)) {
+						where.append(" AND b." + it.getKey() + " = " + value + "\n" );
+					} else {
+						where.append(" AND b." + it.getKey() + " like '%" + value + "%'\n");
+					}
 				}
-				sql.append(")\n");
 			}
 		}
 	}
+	
+	public void querySpecial(Map<String, Object> request, StringBuilder where) {
+		String staffId = (String)request.get("staffId");
+		if(StringUtil.stringValid(staffId)) {
+			where.append("AND ab.staffid = " + staffId + "\n");
+		}
+		
+		String rentAreaFrom = request.get("areaFrom") != null 
+				? request.get("areaFrom").toString() : null;
+		String rentAreaTo = request.get("areaTo") != null 
+				? request.get("areaTo").toString() : null;
+		if(StringUtil.stringValid(rentAreaFrom) || StringUtil.stringValid(rentAreaTo)) {
+			if(StringUtil.stringValid(rentAreaFrom) && StringUtil.stringValid(rentAreaTo)) {
+				where.append("AND b.rent >= " + rentAreaFrom
+						+ " AND b.rent <= " + rentAreaTo + "\n");
+			}
+			else if(StringUtil.stringValid(rentAreaFrom)) {
+				where.append("AND b.rent >= " + rentAreaFrom + "\n");
+			}
+			else where.append("AND b.rent <= " + rentAreaTo + "\n");
+		}
+		
+		String rentPriceFrom = request.get("rentPriceFrom") != null 
+				? request.get("rentPriceFrom").toString() : null;
+		String rentPriceTo = request.get("rentPriceTo") != null 
+				? request.get("rentPriceTo").toString() : null;
+		if(StringUtil.stringValid(rentPriceFrom) || StringUtil.stringValid(rentPriceTo)) {
+			if(StringUtil.stringValid(rentPriceFrom) && StringUtil.stringValid(rentPriceTo)) {
+				where.append("AND b.rent >= " + rentPriceFrom
+						+ " AND b.rent <= " + rentPriceTo + " ");
+			}
+			else if(rentAreaFrom != null) {
+				where.append("AND b.rent >= " + rentPriceFrom + " ");
+			}
+			else where.append("AND b.rent <= " + rentPriceTo + " ");
+		}
+		
+		@SuppressWarnings("unchecked") // Anotation thong bao compiler khong can canh bao warning nua
+		List<String> types = (List<String>)request.get("buildingTypes");
+		if(StringUtil.stringListValid(types)) {
+			List<String> code = new ArrayList<>();
+			for(String item : types) {
+				code.add("'" + item + "'");
+			}
+			where.append(" AND bt.code IN (" + String.join(",", code) + ")\n");
+		}
+	}
+	
 }

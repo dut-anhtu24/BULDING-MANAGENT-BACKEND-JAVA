@@ -23,9 +23,13 @@ public class NumberUtil {
 		try {
 			Long number = Long.parseLong(value);
 		} catch(NumberFormatException ex) {
-			ex.printStackTrace();
+			System.out.print(value + " is not number!\n");
 			return false;
 		}
 		return true;
+	}
+	
+	public static boolean isNumber(Object value) {
+		return value instanceof Number;
 	}
 }

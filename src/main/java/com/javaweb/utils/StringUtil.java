@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class StringUtil {
 	public static boolean stringValid(String data) {
-		if(data != null && !data.isEmpty()) {
+		if(data != null && !data.trim().isEmpty()) {
 			return true;
 		}
 		return false;
