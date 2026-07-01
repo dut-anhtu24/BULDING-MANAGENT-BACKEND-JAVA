@@ -1,24 +1,24 @@
 package com.javaweb.model;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class BuildingSearchRequest {
 	private String name;
 	private Double floor_area;
-	private Long districId;
+	private Long districtId;
 	private String ward;
 	private String street;
 	private Integer numberOfBasement;
 	private String direction;
 	private String level;
-	private Double areaFrom;
-	private Double areaTo;
-	private Double rentPriceFrom;
-	private Double rentPriceTo;
+	private Integer areaFrom;
+	private Integer areaTo;
+	private BigDecimal rentPriceFrom;
+	private BigDecimal rentPriceTo;
 	private String managerName;	private String managerPhone;
 	private Long staffId;
 	private List<String> buildingTypes;
-	
 	public String getName() {
 		return name;
 	}
@@ -31,11 +31,11 @@ public class BuildingSearchRequest {
 	public void setFloor_area(Double floor_area) {
 		this.floor_area = floor_area;
 	}
-	public Long getDistricId() {
-		return districId;
+	public Long getDistrictId() {
+		return districtId;
 	}
-	public void setDistricId(Long districId) {
-		this.districId = districId;
+	public void setDistrictId(Long districId) {
+		this.districtId = districId;
 	}
 	public String getWard() {
 		return ward;
@@ -67,28 +67,29 @@ public class BuildingSearchRequest {
 	public void setLevel(String level) {
 		this.level = level;
 	}
-	public Double getAreaFrom() {
+	
+	public Integer getAreaFrom() {
 		return areaFrom;
 	}
-	public void setAreaFrom(Double areaFrom) {
+	public void setAreaFrom(Integer areaFrom) {
 		this.areaFrom = areaFrom;
 	}
-	public Double getAreaTo() {
+	public Integer getAreaTo() {
 		return areaTo;
 	}
-	public void setAreaTo(Double areaTo) {
+	public void setAreaTo(Integer areaTo) {
 		this.areaTo = areaTo;
 	}
-	public Double getRentPriceFrom() {
+	public BigDecimal getRentPriceFrom() {
 		return rentPriceFrom;
 	}
-	public void setRentPriceFrom(Double rentPriceFrom) {
+	public void setRentPriceFrom(BigDecimal rentPriceFrom) {
 		this.rentPriceFrom = rentPriceFrom;
 	}
-	public Double getRentPriceTo() {
+	public BigDecimal getRentPriceTo() {
 		return rentPriceTo;
 	}
-	public void setRentPriceTo(Double rentPriceTo) {
+	public void setRentPriceTo(BigDecimal rentPriceTo) {
 		this.rentPriceTo = rentPriceTo;
 	}
 	public String getManagerName() {
@@ -115,4 +116,6 @@ public class BuildingSearchRequest {
 	public void setBuildingTypes(List<String> buildingTypes) {
 		this.buildingTypes = buildingTypes;
 	}
+	
+	
 }

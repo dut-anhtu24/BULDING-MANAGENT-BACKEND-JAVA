@@ -28,3 +28,6 @@
 	+ Phí MG
 	+ Diện tích thuê (trả về 1 string bao gồm tất cả dt thuê của
 tòa nhà đó, ví dụ: "100, 200, 300")
+
+*NOTE: Hàm nhận request tại Controller ko quá 3 tham số,
+nếu quá thì phải tìm cách giảm xuống
