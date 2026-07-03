@@ -2,9 +2,9 @@ package com.javaweb.repository;
 
 import java.util.List;
 
-import com.javaweb.model.BuildingSearchDTO;
 import com.javaweb.model.BuildingSearchRequest;
+import com.javaweb.repository.entity.BuildingEntity;
 
 public interface IBuildingRepository {
-	List<BuildingSearchDTO> getBuildingsByRequest(BuildingSearchRequest request);
+	List<BuildingEntity> getBuildingsByRequest(BuildingSearchRequest request);
 }

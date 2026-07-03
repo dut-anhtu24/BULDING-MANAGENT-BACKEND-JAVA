@@ -1,68 +1,51 @@
 package com.javaweb.repository.imp;
 
-import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Repository;
 
-import com.javaweb.model.BuildingSearchDTO;
 import com.javaweb.model.BuildingSearchRequest;
 import com.javaweb.repository.IBuildingRepository;
+import com.javaweb.repository.entity.BuildingEntity;
+import com.javaweb.utils.ConnectionJDBCUtil;
+import com.javaweb.utils.MapUtil;
 import com.javaweb.utils.NumberUtil;
 import com.javaweb.utils.StringUtil;
 
 @Repository
 public class BuildingRepository implements IBuildingRepository {
-	static final String URL = "jdbc:mysql://localhost:3306/building_management?userSSL=false";
-	static final String USER = "root";
-	static final String PASS = "071026";
-		
 	@Override
-	public List<BuildingSearchDTO> getBuildingsByRequest(BuildingSearchRequest request) {
-		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area, "
-				+ "d.name as districtname, b.ward, b.street, b.numberofbasement, b.rent, "
-				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees, "
-				+ "ra.areavalue\n" // TODO: Viet them Query de lay ra List dien tich thue
+	public List<BuildingEntity> getBuildingsByRequest(BuildingSearchRequest request) {
+		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area,\n"
+				+ "b.ward, b.street, b.numberofbasement, b.rent,\n"
+				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees\n"
 				+ "from building b ");
 		handleJoinTable(request, sql);
-		Map<String, Object> mapRequest = new LinkedHashMap<>();
-		Field[] fields = request.getClass().getDeclaredFields();
-		for(Field field : fields) {
-			field.setAccessible(true); // Cho phep truy cap private
-			
-			try {
-				mapRequest.put(field.getName(), field.get(request));
-			} catch(IllegalAccessException e)  {
-				e.printStackTrace();
-			}
-		}
-				
+		Map<String, Object> mapRequest = MapUtil.toMap(request);
+
 		StringBuilder where = new StringBuilder("where 1 = 1 ");
 		queryNormal(mapRequest, where);
 		querySpecial(mapRequest, where);
 		
 		sql.append(where);
+		sql.append("GROUP BY b.id\n");
 		System.out.println(sql);
 		
-		List<BuildingSearchDTO> result = new ArrayList<>();
-		try(Connection cnn = DriverManager.getConnection(URL, USER, PASS);
+		List<BuildingEntity> result = new ArrayList<>();
+		try(Connection cnn = ConnectionJDBCUtil.getConnection();
 			Statement stmt = cnn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql.toString())) {
 			while(rs.next()) {
-				
-				BuildingSearchDTO building = new BuildingSearchDTO();
+				BuildingEntity building = new BuildingEntity();
 				building.setId(rs.getLong("id"));
 				building.setName(rs.getString("name"));
 				building.setWard(rs.getString("ward"));
-				building.setDistrictName(rs.getString("districtname"));
 				building.setStreet(rs.getString("street"));
 				building.setFloorArea(rs.getDouble("floor_area"));
 				building.setNumberOfBasement(rs.getInt("numberofbasement"));
@@ -71,16 +54,16 @@ public class BuildingRepository implements IBuildingRepository {
 				building.setManagerName(rs.getString("manager_name"));
 				building.setManagerPhoneNumber(rs.getString("manager_phone_number"));
 				building.setBrokerageFees(rs.getBigDecimal("brokerage_fees"));
-				building.setRentArea(rs.getString("areavalue"));
 				
 				result.add(building);
 			}
 		} catch(SQLException e) {
 			e.printStackTrace();
-			System.err.println("Connect to databse failed...");
+			System.err.println("Connect to databse failed in Buidlings Field");
 		}
 		return result;
 	}
+	
 	
 	public void handleJoinTable(BuildingSearchRequest request, StringBuilder sql) {
 		sql.append("left join district d on b.districtid = d.id\n");
@@ -165,5 +148,4 @@ public class BuildingRepository implements IBuildingRepository {
 			where.append(" AND bt.code IN (" + String.join(",", code) + ")\n");
 		}
 	}
-	
 }
