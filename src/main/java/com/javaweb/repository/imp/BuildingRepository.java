@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -138,14 +139,26 @@ public class BuildingRepository implements IBuildingRepository {
 			else where.append("AND b.rent <= " + rentPriceTo + " ");
 		}
 		
-		@SuppressWarnings("unchecked") // Anotation thong bao compiler khong can canh bao warning nua
+		// java 7
+//		@SuppressWarnings("unchecked") // Anotation thong bao compiler khong can canh bao warning nua
+//		List<String> types = (List<String>)request.get("buildingTypes");
+//		if(StringUtil.stringListValid(types)) {
+//			List<String> code = new ArrayList<>();
+//			for(String item : types) {
+//				code.add("'" + item + "'");
+//			}
+//			where.append(" AND bt.code IN (" + String.join(",", code) + ")\n");
+//		}
+		
+		// java 8
+		@SuppressWarnings("unchecked")
 		List<String> types = (List<String>)request.get("buildingTypes");
 		if(StringUtil.stringListValid(types)) {
-			List<String> code = new ArrayList<>();
-			for(String item : types) {
-				code.add("'" + item + "'");
-			}
-			where.append(" AND bt.code IN (" + String.join(",", code) + ")\n");
+			where.append(" AND (");
+			String whereSql = types.stream().map(it ->
+			"renttype.code like " + "'%" +it + "%'").collect(Collectors.joining(" OR "));
+			where.append(whereSql);
+			where.append(")\n");
 		}
 	}
 }
