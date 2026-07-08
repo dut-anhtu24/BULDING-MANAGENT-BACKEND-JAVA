@@ -1,38 +1,38 @@
 package com.javaweb.repository.imp;
 
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
+import com.javaweb.builder.BuildingSearchBuilder;
 import com.javaweb.model.BuildingSearchRequest;
 import com.javaweb.repository.IBuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 import com.javaweb.utils.ConnectionJDBCUtil;
-import com.javaweb.utils.MapUtil;
 import com.javaweb.utils.NumberUtil;
 import com.javaweb.utils.StringUtil;
 
 @Repository
 public class BuildingRepository implements IBuildingRepository {
 	@Override
-	public List<BuildingEntity> getBuildingsByRequest(BuildingSearchRequest request) {
+	public List<BuildingEntity> getBuildingsByRequest(BuildingSearchBuilder request) {
 		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area,\n"
 				+ "b.ward, b.street, b.numberofbasement, b.rent,\n"
 				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees\n"
 				+ "from building b ");
 		handleJoinTable(request, sql);
-		Map<String, Object> mapRequest = MapUtil.toMap(request);
 
 		StringBuilder where = new StringBuilder("where 1 = 1 ");
-		queryNormal(mapRequest, where);
-		querySpecial(mapRequest, where);
+		queryNormal(request, where);
+		querySpecial(request, where);
 		
 		sql.append(where);
 		sql.append("GROUP BY b.id\n");
@@ -64,9 +64,14 @@ public class BuildingRepository implements IBuildingRepository {
 		}
 		return result;
 	}
+
+	@Override
+	public List<BuildingEntity> getBuildingsByRequest(BuildingSearchRequest request) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
-	
-	public void handleJoinTable(BuildingSearchRequest request, StringBuilder sql) {
+	public void handleJoinTable(BuildingSearchBuilder request, StringBuilder sql) {
 		sql.append("left join district d on b.districtid = d.id\n");
 		
 		List<String> types = request.getBuildingTypes();
@@ -86,73 +91,70 @@ public class BuildingRepository implements IBuildingRepository {
 		}
 	}
 	
-	public void queryNormal(Map<String, Object> request, StringBuilder where) {
-		for(Map.Entry<String, Object> it : request.entrySet()) {
-			if(!it.getKey().equals("staffId") && !it.getKey().equals("buildingTypes")
-				&& !it.getKey().startsWith("area") && !it.getKey().startsWith("rent")
-				&& it.getValue() != null) {
-				String value = it.getValue().toString();
-				if(StringUtil.stringValid(value)) {
-					if(NumberUtil.isNumber(value)) {
-						where.append(" AND b." + it.getKey() + " = " + value + "\n" );
-					} else {
-						where.append(" AND b." + it.getKey() + " like '%" + value + "%'\n");
+	public void queryNormal(BuildingSearchBuilder request, StringBuilder where) {
+		try {
+			Field[] fields = BuildingSearchBuilder.class.getDeclaredFields();
+			for(Field item : fields) {
+				item.setAccessible(true);
+				String fieldName = item.getName();
+				if(!fieldName.equals("staffId") && !fieldName.equals("buildingTypes")
+						&& !fieldName.startsWith("area") && !fieldName.startsWith("rent")
+						&& item.get(request) != null) {
+					String value = item.get(request).toString();
+					if(StringUtil.stringValid(value)) {
+						if(NumberUtil.isNumber(value)) {
+							where.append(" AND b." + fieldName + " = " + value + "\n" );
+						} else {
+							where.append(" AND b." + fieldName + " like '%" + value + "%'\n");
+						}
 					}
 				}
 			}
+			
+			System.out.println(where);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 	
-	public void querySpecial(Map<String, Object> request, StringBuilder where) {
-		String staffId = (String)request.get("staffId");
-		if(StringUtil.stringValid(staffId)) {
+	public void querySpecial(BuildingSearchBuilder request, StringBuilder where) {
+		Long staffId = request.getStaffId();
+		if(staffId != null) {
 			where.append("AND ab.staffid = " + staffId + "\n");
 		}
 		
-		String rentAreaFrom = request.get("areaFrom") != null 
-				? request.get("areaFrom").toString() : null;
-		String rentAreaTo = request.get("areaTo") != null 
-				? request.get("areaTo").toString() : null;
-		if(StringUtil.stringValid(rentAreaFrom) || StringUtil.stringValid(rentAreaTo)) {
-			if(StringUtil.stringValid(rentAreaFrom) && StringUtil.stringValid(rentAreaTo)) {
-				where.append("AND b.rent >= " + rentAreaFrom
-						+ " AND b.rent <= " + rentAreaTo + "\n");
-			}
-			else if(StringUtil.stringValid(rentAreaFrom)) {
-				where.append("AND b.rent >= " + rentAreaFrom + "\n");
-			}
-			else where.append("AND b.rent <= " + rentAreaTo + "\n");
-		}
-		
-		String rentPriceFrom = request.get("rentPriceFrom") != null 
-				? request.get("rentPriceFrom").toString() : null;
-		String rentPriceTo = request.get("rentPriceTo") != null 
-				? request.get("rentPriceTo").toString() : null;
-		if(StringUtil.stringValid(rentPriceFrom) || StringUtil.stringValid(rentPriceTo)) {
-			if(StringUtil.stringValid(rentPriceFrom) && StringUtil.stringValid(rentPriceTo)) {
-				where.append("AND b.rent >= " + rentPriceFrom
-						+ " AND b.rent <= " + rentPriceTo + " ");
+		Integer rentAreaFrom = request.getAreaFrom() != null 
+				? request.getAreaFrom() : null;
+		Integer rentAreaTo = request.getAreaTo() != null 
+				? request.getAreaTo() : null;
+		if(rentAreaFrom != null || rentAreaTo != null) {
+			if(rentAreaFrom != null && rentAreaTo != null) {
+				where.append("AND ra.areavalue >= " + rentAreaFrom
+						+ " AND ra.areavalue <= " + rentAreaTo + "\n");
 			}
 			else if(rentAreaFrom != null) {
-				where.append("AND b.rent >= " + rentPriceFrom + " ");
+				where.append("AND ra.areavalue >= " + rentAreaFrom + "\n");
 			}
-			else where.append("AND b.rent <= " + rentPriceTo + " ");
+			else where.append("AND ra.areavalue <= " + rentAreaTo + "\n");
 		}
 		
-		// java 7
-//		@SuppressWarnings("unchecked") // Anotation thong bao compiler khong can canh bao warning nua
-//		List<String> types = (List<String>)request.get("buildingTypes");
-//		if(StringUtil.stringListValid(types)) {
-//			List<String> code = new ArrayList<>();
-//			for(String item : types) {
-//				code.add("'" + item + "'");
-//			}
-//			where.append(" AND bt.code IN (" + String.join(",", code) + ")\n");
-//		}
+		BigDecimal rentPriceFrom = request.getRentPriceFrom() != null 
+				? request.getRentPriceFrom() : null;
+		BigDecimal rentPriceTo = request.getRentPriceTo() != null 
+				? request.getRentPriceTo() : null;
+		if(rentPriceFrom != null || rentPriceTo != null) {
+			if(rentPriceFrom != null && rentPriceTo != null) {
+				where.append("AND b.rent >= " + rentPriceFrom
+						+ " AND b.rent <= " + rentPriceTo + "\n");
+			}
+			else if(rentPriceFrom != null) {
+				where.append("AND b.rent >= " + rentPriceFrom + "\n");
+			}
+			else where.append("AND b.rent <= " + rentPriceTo + "\n");
+		}
 		
 		// java 8
-		@SuppressWarnings("unchecked")
-		List<String> types = (List<String>)request.get("buildingTypes");
+		List<String> types = request.getBuildingTypes();
 		if(StringUtil.stringListValid(types)) {
 			where.append(" AND (");
 			String whereSql = types.stream().map(it ->
@@ -161,4 +163,5 @@ public class BuildingRepository implements IBuildingRepository {
 			where.append(")\n");
 		}
 	}
+
 }

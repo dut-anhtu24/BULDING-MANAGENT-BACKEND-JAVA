@@ -16,9 +16,10 @@ public class BuildingSearchRequest {
 	private Integer areaTo;
 	private BigDecimal rentPriceFrom;
 	private BigDecimal rentPriceTo;
-	private String managerName;	private String managerPhone;
+	private String manager_name;	private String manager_phone_number;
 	private Long staffId;
 	private List<String> buildingTypes;
+	
 	public String getName() {
 		return name;
 	}
@@ -93,16 +94,16 @@ public class BuildingSearchRequest {
 		this.rentPriceTo = rentPriceTo;
 	}
 	public String getManagerName() {
-		return managerName;
+		return manager_name;
 	}
 	public void setManagerName(String managerName) {
-		this.managerName = managerName;
+		this.manager_name = managerName;
 	}
 	public String getManagerPhone() {
-		return managerPhone;
+		return manager_phone_number;
 	}
 	public void setManagerPhone(String managerPhone) {
-		this.managerPhone = managerPhone;
+		this.manager_phone_number = managerPhone;
 	}
 	public Long getStaffId() {
 		return staffId;

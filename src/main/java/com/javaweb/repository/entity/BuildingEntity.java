@@ -23,7 +23,7 @@ public class BuildingEntity {
 
 	private String buildingLevel;
 
-	private BigDecimal rent;
+	private BigDecimal rentPrice;
 
 	private BigDecimal servicePrice;
 
@@ -132,11 +132,11 @@ public class BuildingEntity {
 	}
 
 	public BigDecimal getRent() {
-		return rent;
+		return rentPrice;
 	}
 
 	public void setRent(BigDecimal rent) {
-		this.rent = rent;
+		this.rentPrice = rent;
 	}
 
 	public BigDecimal getServicePrice() {
@@ -225,6 +225,14 @@ public class BuildingEntity {
 
 	public void setManagerPhoneNumber(String managerPhoneNumber) {
 		this.managerPhoneNumber = managerPhoneNumber;
+	}
+
+	public BigDecimal getRentPrice() {
+		return rentPrice;
+	}
+
+	public void setRentPrice(BigDecimal rentPrice) {
+		this.rentPrice = rentPrice;
 	}
 
 	public BigDecimal getBrokerageFees() {

@@ -27,6 +27,7 @@ public class BuildingDTOConverter {
 	private ModelMapper modelMapper;
 	
 	public BuildingSearchResponse toBuildingSearchResponse(BuildingEntity building) {
+		//TODO: Xem lai modelMapper chua map duoc cac field gia tien
 		BuildingSearchResponse response = modelMapper.map(building, BuildingSearchResponse.class);
 		response.setAddress(building.getStreet() +  " " + 
 							building.getWard() +  " " + 
