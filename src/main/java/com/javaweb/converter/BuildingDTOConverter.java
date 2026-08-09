@@ -1,0 +1,38 @@
+package com.javaweb.converter;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.javaweb.model.BuildingSearchResponse;
+import com.javaweb.repository.entity.BuildingEntity;
+import com.javaweb.repository.entity.RentAreaEntity;
+
+@Component
+public class BuildingDTOConverter {
+	
+	@Autowired
+	private ModelMapper modelMapper;
+	
+	public BuildingSearchResponse toBuildingSearchResponse(BuildingEntity building) {
+		//TODO: Xem lai modelMapper chua map duoc cac field gia tien
+		BuildingSearchResponse response = modelMapper.map(building, BuildingSearchResponse.class);
+		response.setAddress(building.getStreet() +  " " + building.getWard() +  " " + building.getDistrict());
+		List<RentAreaEntity> rentAreas = building.getRentAreas();
+		String rentAreaResult = rentAreas.stream().map(item -> item.getAreaValue().toString()).collect(Collectors.joining(","));
+		response.setRentArea(rentAreaResult);
+		response.setBrokerageFees(caculationBrokerageFees(response.getRentPrice(), response.getBrokerageFees()));
+		return response;
+	}
+	
+	private BigDecimal caculationBrokerageFees(BigDecimal rent, BigDecimal brokerageFees) {
+		if(rent != null && brokerageFees != null) {
+			return rent.multiply(brokerageFees);
+		}
+		return null;
+	}
+}

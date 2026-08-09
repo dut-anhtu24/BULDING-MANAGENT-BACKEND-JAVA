@@ -2,14 +2,17 @@ package com.javaweb.repository.imp;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
-
-import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Repository;
 
 import com.javaweb.builder.BuildingSearchBuilder;
@@ -20,19 +23,23 @@ import com.javaweb.utils.NumberUtil;
 import com.javaweb.utils.StringUtil;
 
 @Repository
-@Primary
-public class BuildingRepository implements IBuildingRepository {
-	// Các method ứng dụng của EntityManager tương tác với db
-	// persist: Dùng để create / insert record
-	// merge: Update record
-	// remove: Xóa record theo id
-	// find: Tìm kiếm record theo id
-	@PersistenceContext 
-	private EntityManager entityManager;
+@PropertySource("classpath:application.properties")
+public class JDBCBuildingRepository implements IBuildingRepository {
+	@Value("${spring.datasource.url}")
+	private String DB_URL;
+	
+	@Value("${spring.datasource.username}")
+	private String USER;
+	
+	@Value("${spring.datasource.password}")
+	private String PASS;
 	
 	@Override
 	public List<BuildingEntity> getBuildingsByRequest(BuildingSearchBuilder request) {
-		StringBuilder sql = new StringBuilder("select b.* from building b ");
+		StringBuilder sql = new StringBuilder("select b.id, b.name, b.floor_area,\n"
+				+ "b.ward, b.street, b.numberofbasement, b.rent,\n"
+				+ "b.service_price, b.manager_name, b.manager_phone_number, b.brokerage_fees\n"
+				+ "from building b ");
 		handleJoinTable(request, sql);
 
 		StringBuilder where = new StringBuilder("where 1 = 1 ");
@@ -43,8 +50,31 @@ public class BuildingRepository implements IBuildingRepository {
 		sql.append("GROUP BY b.id\n");
 		System.out.println(sql);
 		
-		Query query = entityManager.createNativeQuery(sql.toString(), BuildingEntity.class);
-		return query.getResultList();
+		List<BuildingEntity> result = new ArrayList<>();
+		try(Connection cnn = DriverManager.getConnection(DB_URL, USER, PASS);
+			Statement stmt = cnn.createStatement();
+			ResultSet rs = stmt.executeQuery(sql.toString())) {
+			while(rs.next()) {
+				BuildingEntity building = new BuildingEntity();
+				building.setId(rs.getLong("id"));
+				building.setName(rs.getString("name"));
+				building.setWard(rs.getString("ward"));
+				building.setStreet(rs.getString("street"));
+				building.setFloorArea(rs.getDouble("floor_area"));
+				building.setNumberOfBasement(rs.getInt("numberofbasement"));
+//				building.setRent(rs.getBigDecimal("rent"));
+				building.setServicePrice(rs.getBigDecimal("service_price"));
+				building.setManagerName(rs.getString("manager_name"));
+				building.setManagerPhoneNumber(rs.getString("manager_phone_number"));
+				building.setBrokerageFees(rs.getBigDecimal("brokerage_fees"));
+				
+				result.add(building);
+			}
+		} catch(SQLException e) {
+			e.printStackTrace();
+			System.err.println("Connect to databse failed in Buidlings Field");
+		}
+		return result;
 	}
 
 	@Override
@@ -126,13 +156,13 @@ public class BuildingRepository implements IBuildingRepository {
 				? request.getRentPriceTo() : null;
 		if(rentPriceFrom != null || rentPriceTo != null) {
 			if(rentPriceFrom != null && rentPriceTo != null) {
-				where.append("AND b.rent_price >= " + rentPriceFrom
-						+ " AND b.rent_price <= " + rentPriceTo + "\n");
+				where.append("AND b.rent >= " + rentPriceFrom
+						+ " AND b.rent <= " + rentPriceTo + "\n");
 			}
 			else if(rentPriceFrom != null) {
-				where.append("AND b.rent_price >= " + rentPriceFrom + "\n");
+				where.append("AND b.rent >= " + rentPriceFrom + "\n");
 			}
-			else where.append("AND b.rent_price <= " + rentPriceTo + "\n");
+			else where.append("AND b.rent <= " + rentPriceTo + "\n");
 		}
 		
 		// java 8
@@ -145,5 +175,5 @@ public class BuildingRepository implements IBuildingRepository {
 			where.append(")\n");
 		}
 	}
-	
+
 }

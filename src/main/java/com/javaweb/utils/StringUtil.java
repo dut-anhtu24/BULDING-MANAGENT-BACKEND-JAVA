@@ -1,5 +1,6 @@
 package com.javaweb.utils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,5 +19,14 @@ public class StringUtil {
 			return true;
 		}
 		return false;
+	}
+	
+	public static List<String> stringNormalList(List<String> list) {
+		if (StringUtil.stringListValid(list)) {
+			if (list.size() == 1) {
+				list = Arrays.asList(list.get(0).split("-"));
+			}
+		}
+		return list;
 	}
 }
