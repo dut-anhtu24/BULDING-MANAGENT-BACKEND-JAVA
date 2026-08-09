@@ -3,3 +3,5 @@
 .settings
 target
 /src/main/java/com/javaweb/utils/ConnectionJDBCUtil.java
+resources
+*.properties

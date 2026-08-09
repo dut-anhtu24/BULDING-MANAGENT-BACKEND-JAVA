@@ -1,55 +1,115 @@
 package com.javaweb.repository.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="building")
 public class BuildingEntity {
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name="name", nullable=false)
 	private String name;
 
-	private Long districtId;
-
+	@Column(name="ward")
 	private String ward;
 
+	@Column(name="street")
 	private String street;
 
+	@Column(name="structure")
 	private String structure;
 
+	@Column(name="numberOfBasement")
 	private Integer numberOfBasement;
 
+	@Column(name="floorArea")
 	private Double floorArea;
-
+	
+	@Column(name="direction")
 	private String direction;
 
+	@Column(name="buildingLevel")
 	private String buildingLevel;
 
+	@Column(name="rentPrice")
 	private BigDecimal rentPrice;
 
+	@Column(name="servicePrice")
 	private BigDecimal servicePrice;
 
+	@Column(name="carFees")
 	private BigDecimal carFees;
 
+	@Column(name="motoFees")
 	private BigDecimal motoFees;
 
+	@Column(name="overhoursFees")
 	private BigDecimal overhoursFees;
 
+	@Column(name="electricityPay")
 	private BigDecimal electricityPay;
 
+	@Column(name="deposit")
 	private BigDecimal deposit;
 
+	@Column(name="payment")
 	private String payment;
 
+	@Column(name="rentalTerm")
 	private String rentalTerm;
-
+	
+	@Column(name="decorationTime")
 	private String decorationTime;
 
+	@Column(name="managerName")
 	private String managerName;
 
+	@Column(name="managerPhoneNumber")
 	private String managerPhoneNumber;
-
+	
+	@Column(name="brokerageFees")
 	private BigDecimal brokerageFees;
 
+	@Column(name="notes")
 	private String notes;
+	
+	@ManyToOne
+	@JoinColumn(name="districtId")
+	private DistrictEntity district;
+	
+	@OneToMany(mappedBy = "building", fetch=FetchType.LAZY)
+	private List<RentAreaEntity> rentAreas = new ArrayList<>();
+
+	public DistrictEntity getDistrict() {
+		return district;
+	}
+
+	public void setDistrict(DistrictEntity district) {
+		this.district = district;
+	}
+
+	public List<RentAreaEntity> getRentAreas() {
+		return rentAreas;
+	}
+
+	public void setRentAreas(List<RentAreaEntity> rentAreas) {
+		this.rentAreas = rentAreas;
+	}
 
 	public Long getId() {
 		return id;
@@ -65,14 +125,6 @@ public class BuildingEntity {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public Long getDistrictId() {
-		return districtId;
-	}
-
-	public void setDistrictId(Long districtId) {
-		this.districtId = districtId;
 	}
 
 	public String getWard() {
@@ -131,12 +183,12 @@ public class BuildingEntity {
 		this.buildingLevel = buildingLevel;
 	}
 
-	public BigDecimal getRent() {
+	public BigDecimal getRentPrice() {
 		return rentPrice;
 	}
 
-	public void setRent(BigDecimal rent) {
-		this.rentPrice = rent;
+	public void setRentPrice(BigDecimal rentPrice) {
+		this.rentPrice = rentPrice;
 	}
 
 	public BigDecimal getServicePrice() {
@@ -227,14 +279,6 @@ public class BuildingEntity {
 		this.managerPhoneNumber = managerPhoneNumber;
 	}
 
-	public BigDecimal getRentPrice() {
-		return rentPrice;
-	}
-
-	public void setRentPrice(BigDecimal rentPrice) {
-		this.rentPrice = rentPrice;
-	}
-
 	public BigDecimal getBrokerageFees() {
 		return brokerageFees;
 	}
@@ -250,4 +294,6 @@ public class BuildingEntity {
 	public void setNotes(String notes) {
 		this.notes = notes;
 	}
+
+	
 }

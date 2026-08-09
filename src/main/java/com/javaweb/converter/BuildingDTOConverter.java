@@ -9,19 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.javaweb.model.BuildingSearchResponse;
-import com.javaweb.repository.IDistrictRepository;
-import com.javaweb.repository.IRentAreaRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 import com.javaweb.repository.entity.RentAreaEntity;
 
 @Component
 public class BuildingDTOConverter {
-
-	@Autowired
-	private IDistrictRepository districtRepository;
-	
-	@Autowired
-	private IRentAreaRepository rentAreaRepository;
 	
 	@Autowired
 	private ModelMapper modelMapper;
@@ -29,15 +21,11 @@ public class BuildingDTOConverter {
 	public BuildingSearchResponse toBuildingSearchResponse(BuildingEntity building) {
 		//TODO: Xem lai modelMapper chua map duoc cac field gia tien
 		BuildingSearchResponse response = modelMapper.map(building, BuildingSearchResponse.class);
-		response.setAddress(building.getStreet() +  " " + 
-							building.getWard() +  " " + 
-							districtRepository.findNameById(building.getId()));
-		List<RentAreaEntity> rentAreas = rentAreaRepository.getValueByBuildingId(building.getId());
+		response.setAddress(building.getStreet() +  " " + building.getWard() +  " " + building.getDistrict());
+		List<RentAreaEntity> rentAreas = building.getRentAreas();
 		String rentAreaResult = rentAreas.stream().map(item -> item.getAreaValue().toString()).collect(Collectors.joining(","));
 		response.setRentArea(rentAreaResult);
-		BigDecimal brokerageFees = caculationBrokerageFees(response.getRentPrice(), response.getBrokerageFees());
-		response.setBrokerageFees(brokerageFees);
-		
+		response.setBrokerageFees(caculationBrokerageFees(response.getRentPrice(), response.getBrokerageFees()));
 		return response;
 	}
 	

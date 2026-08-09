@@ -3,6 +3,7 @@ package com.javaweb.builder;
 import java.math.BigDecimal;
 import java.util.List;
 
+// Use Builder Pattern
 public class BuildingSearchBuilder {
 	private String name;
 	private Double floor_area;
