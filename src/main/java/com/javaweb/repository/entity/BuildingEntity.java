@@ -1,55 +1,66 @@
 package com.javaweb.repository.entity;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="building")
 public class BuildingEntity {
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(name = "name", nullable = false)
 	private String name;
 
-	private Long districtId;
-
+	@Column(name = "ward")
 	private String ward;
 
+	@Column(name = "street")
 	private String street;
 
+	@Column(name = "structure")
 	private String structure;
 
+	@Column(name = "numberofbasement")
 	private Integer numberOfBasement;
 
+	@Column(name = "floor_area")
 	private Double floorArea;
 
-	private String direction;
+	@Column(name = "rent_price")
+	private BigDecimal rentPrice;
 
-	private String buildingLevel;
-
-	private BigDecimal rent;
-
+	@Column(name = "service_price")
 	private BigDecimal servicePrice;
 
-	private BigDecimal carFees;
-
-	private BigDecimal motoFees;
-
-	private BigDecimal overhoursFees;
-
-	private BigDecimal electricityPay;
-
-	private BigDecimal deposit;
-
-	private String payment;
-
-	private String rentalTerm;
-
-	private String decorationTime;
-
+	@Column(name = "manager_name")
 	private String managerName;
 
+	@Column(name = "manager_phone_number")
 	private String managerPhoneNumber;
 
+	@Column(name = "brokerage_fees")
 	private BigDecimal brokerageFees;
-
-	private String notes;
+	
+	@ManyToOne
+	@JoinColumn(name="districtid") // Default FetchType là EGEAR
+	private DistrictEntity district;
+	
+	@OneToMany(mappedBy = "building", fetch=FetchType.LAZY)
+	private List<RentAreaEntity> rentAreas = new ArrayList<>();
 
 	public Long getId() {
 		return id;
@@ -65,14 +76,6 @@ public class BuildingEntity {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public Long getDistrictId() {
-		return districtId;
-	}
-
-	public void setDistrictId(Long districtId) {
-		this.districtId = districtId;
 	}
 
 	public String getWard() {
@@ -115,28 +118,12 @@ public class BuildingEntity {
 		this.floorArea = floorArea;
 	}
 
-	public String getDirection() {
-		return direction;
+	public BigDecimal getRentPrice() {
+		return rentPrice;
 	}
 
-	public void setDirection(String direction) {
-		this.direction = direction;
-	}
-
-	public String getBuildingLevel() {
-		return buildingLevel;
-	}
-
-	public void setBuildingLevel(String buildingLevel) {
-		this.buildingLevel = buildingLevel;
-	}
-
-	public BigDecimal getRent() {
-		return rent;
-	}
-
-	public void setRent(BigDecimal rent) {
-		this.rent = rent;
+	public void setRentPrice(BigDecimal rentPrice) {
+		this.rentPrice = rentPrice;
 	}
 
 	public BigDecimal getServicePrice() {
@@ -145,70 +132,6 @@ public class BuildingEntity {
 
 	public void setServicePrice(BigDecimal servicePrice) {
 		this.servicePrice = servicePrice;
-	}
-
-	public BigDecimal getCarFees() {
-		return carFees;
-	}
-
-	public void setCarFees(BigDecimal carFees) {
-		this.carFees = carFees;
-	}
-
-	public BigDecimal getMotoFees() {
-		return motoFees;
-	}
-
-	public void setMotoFees(BigDecimal motoFees) {
-		this.motoFees = motoFees;
-	}
-
-	public BigDecimal getOverhoursFees() {
-		return overhoursFees;
-	}
-
-	public void setOverhoursFees(BigDecimal overhoursFees) {
-		this.overhoursFees = overhoursFees;
-	}
-
-	public BigDecimal getElectricityPay() {
-		return electricityPay;
-	}
-
-	public void setElectricityPay(BigDecimal electricityPay) {
-		this.electricityPay = electricityPay;
-	}
-
-	public BigDecimal getDeposit() {
-		return deposit;
-	}
-
-	public void setDeposit(BigDecimal deposit) {
-		this.deposit = deposit;
-	}
-
-	public String getPayment() {
-		return payment;
-	}
-
-	public void setPayment(String payment) {
-		this.payment = payment;
-	}
-
-	public String getRentalTerm() {
-		return rentalTerm;
-	}
-
-	public void setRentalTerm(String rentalTerm) {
-		this.rentalTerm = rentalTerm;
-	}
-
-	public String getDecorationTime() {
-		return decorationTime;
-	}
-
-	public void setDecorationTime(String decorationTime) {
-		this.decorationTime = decorationTime;
 	}
 
 	public String getManagerName() {
@@ -235,11 +158,19 @@ public class BuildingEntity {
 		this.brokerageFees = brokerageFees;
 	}
 
-	public String getNotes() {
-		return notes;
+	public DistrictEntity getDistrict() {
+		return district;
 	}
 
-	public void setNotes(String notes) {
-		this.notes = notes;
+	public void setDistrict(DistrictEntity district) {
+		this.district = district;
+	}
+
+	public List<RentAreaEntity> getRentAreas() {
+		return rentAreas;
+	}
+
+	public void setRentAreas(List<RentAreaEntity> rentAreas) {
+		this.rentAreas = rentAreas;
 	}
 }

@@ -8,13 +8,12 @@ public class BuildingSearchResponse {
 	private Integer numberOfBasement;
 	private String managerName;
 	private String managerPhone;
-	private Double floor_area;
+	private Double floorArea;
 	private Double empty_area;
 	private BigDecimal rentPrice;
-	private BigDecimal serviceFees;
+	private BigDecimal servicePrice;
 	private BigDecimal brokerageFees;
 	private String rentArea;
-	
 	public String getName() {
 		return name;
 	}
@@ -45,11 +44,11 @@ public class BuildingSearchResponse {
 	public void setManagerPhone(String managerPhone) {
 		this.managerPhone = managerPhone;
 	}
-	public Double getFloor_area() {
-		return floor_area;
+	public Double getFloorArea() {
+		return floorArea;
 	}
-	public void setFloor_area(Double floor_area) {
-		this.floor_area = floor_area;
+	public void setFloorArea(Double floorArea) {
+		this.floorArea = floorArea;
 	}
 	public Double getEmpty_area() {
 		return empty_area;
@@ -57,18 +56,17 @@ public class BuildingSearchResponse {
 	public void setEmpty_area(Double empty_area) {
 		this.empty_area = empty_area;
 	}
-	
 	public BigDecimal getRentPrice() {
 		return rentPrice;
 	}
 	public void setRentPrice(BigDecimal rentPrice) {
 		this.rentPrice = rentPrice;
 	}
-	public BigDecimal getServiceFees() {
-		return serviceFees;
+	public BigDecimal getServicePrice() {
+		return servicePrice;
 	}
-	public void setServiceFees(BigDecimal serviceFees) {
-		this.serviceFees = serviceFees;
+	public void setServicePrice(BigDecimal servicePrice) {
+		this.servicePrice = servicePrice;
 	}
 	public BigDecimal getBrokerageFees() {
 		return brokerageFees;
