@@ -15,28 +15,32 @@ import com.javaweb.model.BuildingSearchResponse;
 import com.javaweb.repository.IBuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
 import com.javaweb.service.IBuildingService;
-import com.javaweb.utils.StringUtil;
 
 @Service
 public class BuildingService implements IBuildingService {
 
-	@Autowired 
+	@Autowired
 	private IBuildingRepository buildingRepository;
-	
+
 	@Autowired
 	private BuildingDTOConverter buildingDTOConverter;
-	
+
 	@Autowired
 	private BuildingSearchBuilderConverter buildingSearchBuilderConverter;
-	
+
 	@Override
 	public List<BuildingSearchResponse> getBuildingsByRequest(BuildingSearchRequest request) {
-		// Handle logic for building types
-		request.setBuildingTypes(StringUtil.stringNormalList(request.getBuildingTypes()));
-		
-		List<BuildingEntity> buildingEntities = buildingRepository.getBuildingsByRequest(request);
+
+		return null;
+	}
+
+	@Override
+	public List<BuildingSearchResponse> getBuildingsByRequest(Map<String, Object> request) {
+		BuildingSearchBuilder buildingSearchBuilder = buildingSearchBuilderConverter
+														.toBuildingSearchBuilder(request);
+		List<BuildingEntity> buildingEntities = buildingRepository.getBuildingsByRequest(buildingSearchBuilder);
 		List<BuildingSearchResponse> result = new ArrayList<>();
-		for(BuildingEntity building : buildingEntities) {
+		for (BuildingEntity building : buildingEntities) {
 			BuildingSearchResponse response = buildingDTOConverter.toBuildingSearchResponse(building);
 			result.add(response);
 		}
@@ -44,16 +48,4 @@ public class BuildingService implements IBuildingService {
 		return result;
 	}
 
-	@Override
-	public List<BuildingSearchResponse> getBuildingsByRequest(Map<String, Object> request) {
-		BuildingSearchBuilder buildingSearchBuilder = buildingSearchBuilderConverter.toBuildingSearchBuilder(request);
-		List<BuildingEntity> buildingEntities = buildingRepository.getBuildingsByRequest(buildingSearchBuilder);
-		List<BuildingSearchResponse> result = new ArrayList<>();
-		for(BuildingEntity building : buildingEntities) {
-			BuildingSearchResponse response = buildingDTOConverter.toBuildingSearchResponse(building);
-			result.add(response);
-		}
-		return result;
-	}
-	
 }

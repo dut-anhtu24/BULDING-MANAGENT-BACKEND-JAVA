@@ -32,9 +32,14 @@ public class UserEntity {
 
 	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_role",
-			joinColumns = @JoinColumn(name = "userid", nullable = false),
-			inverseJoinColumns = @JoinColumn(name ="roleid", nullable = false))
+			joinColumns = @JoinColumn(name = "userid", 
+									referencedColumnName = "id", nullable = false),
+			inverseJoinColumns = @JoinColumn(name ="roleid",
+									referencedColumnName = "id", nullable = false))
 	private List<RoleEntity> roles = new ArrayList<>();
+	
+	@ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+	List<BuildingEntity> buildings = new ArrayList<>();
 	
 	public Long getId() {
 		return id;
@@ -68,6 +73,12 @@ public class UserEntity {
 		this.roles = roles;
 	}
 
-	
+	public List<BuildingEntity> getBuildings() {
+		return buildings;
+	}
+
+	public void setBuildings(List<BuildingEntity> buildings) {
+		this.buildings = buildings;
+	}
 	
 }
