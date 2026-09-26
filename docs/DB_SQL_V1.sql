@@ -65,16 +65,6 @@ CREATE TABLE BUILDING (
         REFERENCES DISTRICT(ID)
 );
 
--- =====================================
--- RENT TYPE
--- =====================================
-CREATE TABLE RENTTYPE (
-    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
-
-    CODE VARCHAR(50) NOT NULL UNIQUE,
-
-    NAME VARCHAR(255) NOT NULL
-);
 
 -- =====================================
 -- BUILDING - BUILDINGTYPE (N-N)

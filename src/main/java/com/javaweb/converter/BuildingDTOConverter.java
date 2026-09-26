@@ -21,9 +21,14 @@ public class BuildingDTOConverter {
 	public BuildingSearchResponse toBuildingSearchResponse(BuildingEntity building) {
 		//TODO: Xem lai modelMapper chua map duoc cac field gia tien
 		BuildingSearchResponse response = modelMapper.map(building, BuildingSearchResponse.class);
-		response.setAddress(building.getStreet() +  " " + building.getWard() +  " " + building.getDistrict());
+		response.setAddress(building.getStreet() +  ", "
+						+ building.getWard() +  ", " 
+						+ building.getDistrict().getName());
+		
 		List<RentAreaEntity> rentAreas = building.getRentAreas();
-		String rentAreaResult = rentAreas.stream().map(item -> item.getAreaValue().toString()).collect(Collectors.joining(","));
+		String rentAreaResult = rentAreas.stream().map(item -> item.getAreaValue()
+																.toString()).collect(Collectors.joining(","));
+		
 		response.setRentArea(rentAreaResult);
 		response.setBrokerageFees(caculationBrokerageFees(response.getRentPrice(), response.getBrokerageFees()));
 		return response;

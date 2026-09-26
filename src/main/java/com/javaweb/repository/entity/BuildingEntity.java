@@ -11,6 +11,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -61,6 +63,22 @@ public class BuildingEntity {
 	
 	@OneToMany(mappedBy = "building", fetch=FetchType.LAZY)
 	private List<RentAreaEntity> rentAreas = new ArrayList<>();
+	
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "assignmentbuilding",
+			joinColumns = @JoinColumn(name="buildingid",
+									referencedColumnName = "id", nullable = false),
+			inverseJoinColumns = @JoinColumn(name="staffid",
+									referencedColumnName = "id", nullable = false))
+	private List<UserEntity> users = new ArrayList<>();
+	
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(name = "building_buildingtype",
+			joinColumns = @JoinColumn(name="buildingid",
+									referencedColumnName = "id", nullable = false),
+			inverseJoinColumns = @JoinColumn(name = "buildingtypeid",
+									referencedColumnName = "id", nullable = false))
+	private List<BuildingTypeEntity> buildingTypes = new ArrayList<>();
 
 	public Long getId() {
 		return id;
@@ -173,4 +191,21 @@ public class BuildingEntity {
 	public void setRentAreas(List<RentAreaEntity> rentAreas) {
 		this.rentAreas = rentAreas;
 	}
+
+	public List<UserEntity> getUsers() {
+		return users;
+	}
+
+	public void setUsers(List<UserEntity> users) {
+		this.users = users;
+	}
+
+	public List<BuildingTypeEntity> getBuildingTypes() {
+		return buildingTypes;
+	}
+
+	public void setBuildingTypes(List<BuildingTypeEntity> buildingTypes) {
+		this.buildingTypes = buildingTypes;
+	}
+	
 }
